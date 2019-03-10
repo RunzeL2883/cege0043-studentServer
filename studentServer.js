@@ -8,6 +8,11 @@ var app = express();
 // directly called in a typed URL
 var http = require('http');
 var httpServer = http.createServer(app);
+httpServer.listen(4480);
+
+app.get('/',function (req,res) {
+	res.send("hello world from the HTTP server");
+});
 
 // adding functionality to log the requests
 app.use(function (req, res, next) {
@@ -16,8 +21,12 @@ app.use(function (req, res, next) {
 	console.log("The file " + filename + " was requested.");
 	next();
 });
-httpServer.listen(4480);
-app.get('/',function (req,res) {
-	res.send("hello world from the HTTP server");
-});
 
+app.get('/:fileName', function (req, res) {
+    // run some server-side code
+    var fileName = req.params.fileName;
+    console.log(fileName + ' requested');
+
+    // note that __dirname gives the path to the studentServer.js file
+    res.sendFile(__dirname + '/'+ fileName);
+});
