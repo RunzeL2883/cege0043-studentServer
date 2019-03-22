@@ -10,17 +10,7 @@ var httpServer = http.createServer(app);
 httpServer.listen(4480);
 
 
-//You should see ‘hello world from the HTTP server’
-app.get('/',function (req,res) {
-	res.send("hello world from the HTTP server");
-});
 
-//process the uploaded data
-var bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({
-	extended: true
-}));
-app.use(bodyParser.json());
 
 var fs = require('fs');
 var pg = require('pg');
@@ -34,23 +24,12 @@ for (var i = 0; i < configarray.length; i++) {
 }
 var pool = new pg.Pool(config);
 
-app.get('/postgistest', function (req,res) {
-	pool.connect(function(err,client,done) {
-		if(err){
-			console.log("not able to get connection "+ err);
-			res.status(400).send(err);
-		}
-
-		client.query('SELECT name FROM london_poi' ,function(err,result) {
-			done();
-			if(err){
-				console.log(err);
-				res.status(400).send(err);
-			}
-			res.status(200).send(result.rows);
-		});
-	});
-});
+//process the uploaded data
+var bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
 	res.header("Access-Control-Allow-Origin", "*");
@@ -66,40 +45,55 @@ app.use(function (req, res, next) {
 	next();
 });
 
-app.post('/reflectData',function(req,res){
-    // note that we are using POST here as we are uploading data
-    // so the parameters form part of the BODY of the request rather
-    //than the RESTful API
-    console.dir(req.body);
-    // for now, just echo the request back to the client
-    res.send(req.body);
+//You should see ‘hello world from the HTTP server’
+app.get('/',function (req,res) {
+    res.send("hello world from the HTTP server");
 });
 
-post('/uploadData',function(req,res){
+app.post('/uploadData',function(req,res){
     // note that we are using POST here as we are uploading data
     // so the parameters form part of the BODY of the request rather than the RESTful API
     console.dir(req.body);
     pool.connect(function(err,client,done) {
-    	if(err){
-    		console.log("not able to get connection "+ err);
-    		res.status(400).send(err);
-    	}
-    	var name = req.body.name;
-    	var surname = req.body.surname;
-    	var module = req.body.module;
-    	var portnum = req.body.port_id;
-    	var querystring = "INSERT into formdata (name,surname,module, port_id) values ($1,$2,$3,$4) ";
-    	console.log(querystring);
-    	client.query( querystring,[name,surname,module,portnum],function(err,result) {
-    		done();
-    		if(err){
-    			console.log(err);
-    			res.status(400).send(err);
-    		}
-    		res.status(200).send("row inserted");
-    	});
+        if(err){
+            console.log("not able to get connection "+ err);
+            res.status(400).send(err);
+        }
+        var name = req.body.name;
+        var surname = req.body.surname;
+        var module = req.body.module;
+        var portnum = req.body.port_id;
+        var querystring = "INSERT into formdata (name,surname,module, port_id) values ($1,$2,$3,$4) ";
+        console.log(querystring);
+        client.query( querystring,[name,surname,module,portnum],function(err,result) {
+            done();
+            if(err){
+                console.log(err);
+                res.status(400).send(err);
+            }
+            res.status(200).send("row inserted");
+        });
     });
 });
+
+app.get('/postgistest', function (req,res) {
+    pool.connect(function(err,client,done) {
+        if(err){
+            console.log("not able to get connection "+ err);
+            res.status(400).send(err);
+        }
+
+        client.query('SELECT name FROM london_poi' ,function(err,result) {
+            done();
+            if(err){
+                console.log(err);
+                res.status(400).send(err);
+            }
+            res.status(200).send(result.rows);
+        });
+    });
+});
+
 
 // serve static files - e.g. html, css
 // this should always be the last line in the server file
